@@ -46,8 +46,8 @@ def component(cls: type[T] | None = None, **default_params):  # noqa: UP047
 
     >>> @component
     ... class MyComponent(BaseComponent):
-    ...     def __init__(self, model, verbose=False, param1=1, param2=2):
-    ...         super().__init__(model, verbose)
+    ...     def __init__(self, model, param1=1, param2=2):
+    ...         super().__init__(model)
     ...         self.param1 = param1
     ...         self.param2 = param2
 
@@ -55,8 +55,8 @@ def component(cls: type[T] | None = None, **default_params):  # noqa: UP047
 
     >>> @component(param1=10, param2=20)
     ... class MyComponent(BaseComponent):
-    ...     def __init__(self, model, verbose=False, param1=1, param2=2):
-    ...         super().__init__(model, verbose)
+    ...     def __init__(self, model, param1=1, param2=2):
+    ...         super().__init__(model)
     ...         self.param1 = param1
     ...         self.param2 = param2
 
@@ -92,7 +92,7 @@ def component(cls: type[T] | None = None, **default_params):  # noqa: UP047
     return decorator
 
 
-def create_component(component_class: type[T], params: type[B] | None = None) -> Callable[[Any, Any], T]:  # noqa: UP047
+def create_component(component_class: type[T], params: type[B] | None = None) -> Callable[[Any], T]:  # noqa: UP047
     """
     Helper function to create a component instance with parameters.
 
@@ -103,13 +103,14 @@ def create_component(component_class: type[T], params: type[B] | None = None) ->
     ----------
     component_class : Type[BaseComponent]
         The component class to instantiate
-    **kwargs
-        Parameters to pass to the component constructor
+    params : BaseModel, optional
+        Parameter object to pass to the component constructor as ``params=...``.
 
     Returns
     -------
-    Callable[[Any, Any], BaseComponent]
-        A function that creates the component instance when called by the model
+    Callable[[Any], BaseComponent]
+        A single-argument factory: when called by the model with the model
+        instance, it returns ``component_class(model, params=params)``.
 
     Examples
     --------
@@ -127,8 +128,8 @@ def create_component(component_class: type[T], params: type[B] | None = None) ->
             else:
                 self.params = None
 
-        def __call__(self, model: Any, verbose: bool = False) -> T:
-            return self.component_class(model, params=self.params, verbose=verbose)
+        def __call__(self, model: Any) -> T:
+            return self.component_class(model, params=self.params)
 
         def __str__(self) -> str:
             return f"<{self.component_class.__name__} factory>"
