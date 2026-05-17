@@ -184,6 +184,7 @@ Writing rules:
 
     raw = message.content[0].text.strip()
     logger.info("Received Claude response, parsing JSON")
+    logger.info(f"=====\n{raw}\n=====")
 
     # Strip accidental markdown code fences if present
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
