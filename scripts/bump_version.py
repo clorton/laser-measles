@@ -20,6 +20,7 @@ import sys
 import tomllib
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 try:
     import anthropic
@@ -94,7 +95,8 @@ def get_commits_since(tag: str | None) -> list[dict[str, str]]:
             }
         )
 
-    logger.info("Found %d commit(s) since %s", len(commits), tag or "beginning of history")
+    logger.info("Found %d commit(s) since %s", len(
+        commits), tag or "beginning of history")
     return commits
 
 
@@ -143,7 +145,8 @@ def analyze_commits_with_claude(
     """
     logger.info("Sending %d commit(s) to Claude for analysis", len(commits))
 
-    commit_lines = "\n".join(f"- {c['subject']}" + (f"\n  {c['body']}" if c["body"] else "") for c in commits)
+    commit_lines = "\n".join(
+        f"- {c['subject']}" + (f"\n  {c['body']}" if c["body"] else "") for c in commits)
 
     prompt = f"""You are a release engineer. Analyze the git commits below and produce structured release notes.
 
@@ -234,7 +237,8 @@ def bump_semver(version: str, bump_type: str) -> str:
         patch += 1
         suffix = ""
     else:
-        raise ValueError(f"Invalid bump_type: {bump_type!r}. Must be major, minor, or patch.")
+        raise ValueError(
+            f"Invalid bump_type: {bump_type!r}. Must be major, minor, or patch.")
 
     new_version = f"{major}.{minor}.{patch}{suffix}"
     logger.info("Version bump: %s → %s (%s)", version, new_version, bump_type)
@@ -265,7 +269,8 @@ def write_new_version(pyproject_path: Path, new_version: str) -> None:
     )
 
     if n_subs == 0:
-        raise RuntimeError(f'Could not find version = "..." in {pyproject_path}')
+        raise RuntimeError(
+            f'Could not find version = "..." in {pyproject_path}')
 
     pyproject_path.write_text(updated, encoding="utf-8")
     logger.info("pyproject.toml updated")
@@ -281,7 +286,7 @@ def build_changelog_section(version: str, analysis: dict) -> str:
     Returns:
         Formatted markdown string, ending with a trailing newline.
     """
-    today = datetime.now(tz=...).date()
+    today = datetime.now(ZoneInfo("America/Los_Angeles")).date()
     lines: list[str] = [f"## [{version}] - {today}", ""]
 
     if analysis.get("summary"):
@@ -317,7 +322,8 @@ def prepend_to_changelog(changelog_path: Path, new_section: str) -> None:
 
     if "## " in existing:
         insert_pos = existing.index("## ")
-        updated = existing[:insert_pos] + new_section + "\n" + existing[insert_pos:]
+        updated = existing[:insert_pos] + \
+            new_section + "\n" + existing[insert_pos:]
     else:
         updated = existing.rstrip("\n") + "\n\n" + new_section
 
@@ -327,7 +333,8 @@ def prepend_to_changelog(changelog_path: Path, new_section: str) -> None:
 
 def main() -> None:
     """Orchestrate the version bump: detect changes, call Claude, write files."""
-    repo_root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path.cwd()
+    repo_root = Path(sys.argv[1]).resolve() if len(
+        sys.argv) > 1 else Path.cwd()
     pyproject_path = repo_root / "pyproject.toml"
     changelog_path = repo_root / "CHANGELOG.md"
 
